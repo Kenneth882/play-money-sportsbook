@@ -17,4 +17,4 @@ Every pull request runs ruff (check + format check), mypy and the full pytest su
 - [ ] Workflow runs on pull requests and pushes to main
 - [ ] Testcontainers tests run in CI against real Postgres (no DB mocking)
 - [ ] A deliberately failing test or lint error turns the check red
-- [ ] README or AGENTS.md notes how CI runs
+- [ ] README or CLAUDE.md notes how CI runs

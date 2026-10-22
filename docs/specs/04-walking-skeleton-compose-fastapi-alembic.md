@@ -10,7 +10,7 @@ Must uphold the financial invariants and critical flows in [CLAUDE.md](../../CLA
 
 ## What to build
 
-A developer can run `docker compose up` and get Postgres plus the FastAPI backend, with a health endpoint returning 200. The backend has a SQLAlchemy session with explicit transaction boundaries, an Alembic baseline migration, and a Testcontainers-backed real-Postgres fixture that later integration tests reuse. Lint and type checking are configured. Follow the repository layout in AGENTS.md.
+A developer can run `docker compose up` and get Postgres plus the FastAPI backend, with a health endpoint returning 200. The backend has a SQLAlchemy session with explicit transaction boundaries, an Alembic baseline migration, and a Testcontainers-backed real-Postgres fixture that later integration tests reuse. Lint and type checking are configured. Follow the repository layout in CLAUDE.md.
 
 ## Acceptance criteria
 
@@ -18,4 +18,4 @@ A developer can run `docker compose up` and get Postgres plus the FastAPI backen
 - [ ] `alembic upgrade head` runs cleanly against the Compose database
 - [ ] One integration test runs against real Postgres via Testcontainers and passes
 - [ ] ruff and mypy are configured and pass on the skeleton
-- [ ] AGENTS.md Commands section updated to match the real tooling
+- [ ] CLAUDE.md Commands section updated to match the real tooling
