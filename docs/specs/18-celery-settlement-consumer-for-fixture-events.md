@@ -1,0 +1,22 @@
+# #18: Celery settlement consumer for fixture events
+
+- **Issue:** https://github.com/Kenneth882/play-money-sportsbook/issues/18
+- **Phase:** Phase 2: Distributed (Weeks 5–7) (#2)
+- **Blocked by:** [#14 Void and refund bets on postponed/cancelled fixtures](14-void-and-refund-bets-on-postponed-cancelled.md), [#17 Transactional outbox and RabbitMQ publisher](17-transactional-outbox-and-rabbitmq-publisher.md)
+- **Unblocks:** [#19](19-scheduled-fixture-ingestion-and-odds-refresh.md), [#20](20-settlement-recovery-test-kill-worker-mid.md), [#21](21-redis-leaderboard.md), [#24](24-prometheus-metrics-and-grafana-dashboard.md)
+- **Status:** ready-for-agent
+
+Must uphold the financial invariants and critical flows in [CLAUDE.md](../../CLAUDE.md).
+
+## What to build
+
+Settlement and voiding move from the in-process trigger to a Celery worker that consumes fixture events from RabbitMQ and processes pending bets in batches, reusing the per-bet settlement transaction. The consumer is idempotent under at-least-once delivery.
+
+## Acceptance criteria
+
+- [ ] Delivering the same FIXTURE_FINISHED message twice leaves totals unchanged (idempotency test)
+- [ ] Batches: a large number of pending bets settles correctly
+- [ ] Workers can run as multiple concurrent instances without double payouts
+- [ ] Task retries are safe
+- [ ] Every money-touching test ends with a ledger reconciliation assertion (`balance == SUM(ledger_entries.amount)` for every account)
+- [ ] `ruff check`, `ruff format --check`, `mypy app` and `pytest` all pass
