@@ -1,8 +1,8 @@
-# #19: Scheduled fixture ingestion and odds refresh on Celery beat
+# #19: Scheduled game ingestion and odds refresh on Celery beat
 
 - **Issue:** https://github.com/Kenneth882/play-money-sportsbook/issues/19
 - **Phase:** Phase 2: Distributed (Weeks 5–7) (#2)
-- **Blocked by:** [#18 Celery settlement consumer for fixture events](18-celery-settlement-consumer-for-fixture-events.md)
+- **Blocked by:** [#18 Celery settlement consumer for game events](18-celery-settlement-consumer-for-game-events.md)
 - **Unblocks:** [#23](23-kubernetes-manifests-for-kind.md)
 - **Status:** ready-for-agent
 
@@ -10,11 +10,11 @@ Must uphold the financial invariants and critical flows in [CLAUDE.md](../../CLA
 
 ## What to build
 
-Fixture ingestion and odds generation run as periodic Celery tasks rather than manual jobs, safe to retry and safe to run concurrently.
+Game ingestion and odds generation run as periodic Celery tasks rather than manual jobs, safe to retry and safe to run concurrently.
 
 ## Acceptance criteria
 
-- [ ] Periodic schedule configured; intervals respect football-data.org free-tier limits
-- [ ] Overlapping or retried runs produce no duplicate fixtures and correct snapshots
+- [ ] Periodic schedule configured; intervals respect balldontlie free-tier rate limits
+- [ ] Overlapping or retried runs produce no duplicate games and correct snapshots
 - [ ] Final-score detection flows through the outbox to settlement end to end
 - [ ] `ruff check`, `ruff format --check`, `mypy app` and `pytest` all pass

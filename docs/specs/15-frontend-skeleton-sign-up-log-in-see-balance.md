@@ -3,7 +3,7 @@
 - **Issue:** https://github.com/Kenneth882/play-money-sportsbook/issues/15
 - **Phase:** Phase 1: Core backend (Weeks 1–4) (#1)
 - **Blocked by:** [#7 Login and authenticated requests](07-login-and-authenticated-requests.md)
-- **Unblocks:** [#16](16-frontend-browse-fixtures-place-bets-view.md)
+- **Unblocks:** [#16](16-frontend-browse-games-place-bets-view-history.md)
 - **Status:** ready-for-agent
 
 Must uphold the financial invariants and critical flows in [CLAUDE.md](../../CLAUDE.md).

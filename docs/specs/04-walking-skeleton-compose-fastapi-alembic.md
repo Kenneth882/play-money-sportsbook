@@ -3,7 +3,7 @@
 - **Issue:** https://github.com/Kenneth882/play-money-sportsbook/issues/4
 - **Phase:** Phase 1: Core backend (Weeks 1–4) (#1)
 - **Blocked by:** None (can start immediately)
-- **Unblocks:** [#5](05-ci-on-github-actions-lint-types-tests.md), [#6](06-sign-up-with-1-000-credit-signup-bonus.md), [#8](08-fixture-ingestion-from-football-data-org.md)
+- **Unblocks:** [#5](05-ci-on-github-actions-lint-types-tests.md), [#6](06-sign-up-with-1-000-credit-signup-bonus.md), [#8](08-game-ingestion-from-balldontlie.md)
 - **Status:** ready-for-agent
 
 Must uphold the financial invariants and critical flows in [CLAUDE.md](../../CLAUDE.md).

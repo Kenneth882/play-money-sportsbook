@@ -10,10 +10,10 @@ Must uphold the financial invariants and critical flows in [CLAUDE.md](../../CLA
 
 ## What to build
 
-A single trace follows a request from the API through the outbox publisher and RabbitMQ to the settlement worker, with bet_id/fixture_id attributes, viewable in a local trace backend.
+A single trace follows a request from the API through the outbox publisher and RabbitMQ to the settlement worker, with bet_id/game_id attributes, viewable in a local trace backend.
 
 ## Acceptance criteria
 
 - [ ] Trace context propagates across the outbox and message broker
-- [ ] Spans carry bet_id, account_id, fixture_id where relevant
+- [ ] Spans carry bet_id, account_id, game_id where relevant
 - [ ] Tracing failure never affects request or settlement outcomes

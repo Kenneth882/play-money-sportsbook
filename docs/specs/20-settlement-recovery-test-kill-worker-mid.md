@@ -2,7 +2,7 @@
 
 - **Issue:** https://github.com/Kenneth882/play-money-sportsbook/issues/20
 - **Phase:** Phase 2: Distributed (Weeks 5–7) (#2)
-- **Blocked by:** [#18 Celery settlement consumer for fixture events](18-celery-settlement-consumer-for-fixture-events.md)
+- **Blocked by:** [#18 Celery settlement consumer for game events](18-celery-settlement-consumer-for-game-events.md)
 - **Unblocks:** [#23](23-kubernetes-manifests-for-kind.md)
 - **Status:** ready-for-agent
 

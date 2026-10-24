@@ -4,7 +4,7 @@ This file guides Claude Code when working in this repository.
 
 ## Project
 
-**SoccerExchange** — a play-money soccer sportsbook built as a backend/infrastructure engineering project. Users get virtual credits, bet on real matches (home/draw/away) at locked odds, and compete on a leaderboard.
+**HoopsExchange** — a play-money NBA sportsbook built as a backend/infrastructure engineering project. Users get virtual credits, bet on real NBA games (home/away moneyline; there is no draw) at locked odds, and compete on a leaderboard.
 
 The betting is the use case; the real goal is **correctness under concurrency, duplicate messages, and failures**. No lost credits, no double payouts, no negative balances — ever. When a trade-off arises between speed/convenience and financial correctness, choose correctness.
 
@@ -16,18 +16,18 @@ The betting is the use case; the real goal is **correctness under concurrency, d
 | Database | PostgreSQL (source of truth) |
 | Cache / rate limiting / leaderboard | Redis |
 | Messaging | RabbitMQ |
-| Workers | Celery (fixture ingestion, odds, settlement, outbox publisher) |
+| Workers | Celery (game ingestion, odds, settlement, outbox publisher) |
 | Frontend | Next.js + TypeScript (keep it functional, not fancy) |
 | Testing | pytest, Testcontainers (real Postgres), k6 for load |
 | Infra | Docker Compose first → Kubernetes (kind/minikube) → AWS later |
 | CI | GitHub Actions |
 | Observability | Prometheus, Grafana, OpenTelemetry |
-| Data | football-data.org free tier; odds generated in-house (Elo / Poisson) |
+| Data | balldontlie API free tier; odds generated in-house (Elo with home-court advantage) |
 
 ## Architecture rules
 
 - **Betting and Wallet live in the same FastAPI app and the same Postgres database.** Placing a bet must debit the wallet and record the wager atomically. Do not split them into separate services or databases.
-- Workers (fixtures, odds, settlement) run as separate processes and may scale horizontally.
+- Workers (games, odds, settlement) run as separate processes and may scale horizontally.
 - Events leave the database via a **transactional outbox**: write the outbox row in the same transaction as the state change; a publisher process forwards it to RabbitMQ. Never publish to RabbitMQ directly from inside a business transaction.
 - Assume **at-least-once delivery** everywhere. Every consumer must be idempotent.
 - Add infrastructure (RabbitMQ, K8s, observability) incrementally, only once the layer below it works and is tested.
@@ -39,15 +39,18 @@ users            id, email, password_hash, created_at
 accounts         id, user_id, balance BIGINT CHECK (balance >= 0)
 ledger_entries   id, account_id, amount, type, bet_id, created_at
                  partial UNIQUE (bet_id, type) for BET_PAYOUT / BET_REFUND
-fixtures         id, external_id UNIQUE, home_team, away_team, kickoff, status,
+games            id, external_id UNIQUE, home_team, away_team, tip_off, status
+                 (scheduled|in_progress|final|postponed|cancelled),
                  home_score, away_score
-odds             id, fixture_id, outcome, price, created_at   (append-only snapshots)
-bets             id, account_id, fixture_id, outcome, stake, locked_price,
+odds             id, game_id, outcome, price, created_at   (append-only snapshots)
+bets             id, account_id, game_id, outcome, stake, locked_price,
                  status (pending|won|lost|void), idempotency_key UNIQUE, created_at
 outbox           id, event_type, payload JSONB, created_at, published_at
 ```
 
 Ledger entry types: `SIGNUP_BONUS`, `BET_PLACED`, `BET_PAYOUT`, `BET_REFUND`.
+
+Outcomes are `home` or `away` only, enforced by `CHECK (outcome IN ('home', 'away'))` on `odds` and `bets`.
 
 ## Financial invariants (non-negotiable)
 
@@ -70,20 +73,20 @@ Rules that follow from these:
 ### Placing a bet (single transaction)
 1. Request carries a client-generated **idempotency key**. If a bet with that key exists, return it unchanged (same response, no new writes).
 2. `SELECT ... FROM accounts WHERE id = :id FOR UPDATE`.
-3. Validate on the server: fixture exists, status is scheduled, `now() < kickoff`, outcome valid, price matches the current odds snapshot. Never trust client-supplied odds.
+3. Validate on the server: game exists, status is scheduled, `now() < tip_off`, outcome valid, price matches the current odds snapshot. Never trust client-supplied odds.
 4. Check `balance >= stake`; otherwise raise `InsufficientFunds`.
 5. Insert bet (with `locked_price`), insert `BET_PLACED` ledger entry (negative amount), decrement balance.
 6. Commit, or roll back everything.
 
 Lock ordering: always lock account rows before bet rows to avoid deadlocks.
 
-### Settling a fixture
-1. Fixture worker detects final score → in one transaction update the fixture and write a `FIXTURE_FINISHED` outbox row.
+### Settling a game
+1. Game worker detects final score → in one transaction update the game and write a `GAME_FINISHED` outbox row.
 2. Settlement worker consumes the event and processes pending bets in batches.
-3. Per bet, in one transaction: lock the bet, skip if not `pending`, mark `won`/`lost`, for winners insert a `BET_PAYOUT` ledger entry and credit the balance.
+3. Per bet, in one transaction: lock the bet, skip if not `pending`, mark `won`/`lost` (higher final score wins), for winners insert a `BET_PAYOUT` ledger entry and credit the balance.
 4. The unique `(bet_id, type)` constraint is the backstop: a duplicate payout must fail and roll back, not double-pay.
-5. Postponed/cancelled fixtures → bets `void`, `BET_REFUND` of the stake.
-6. Rerunning settlement for the same fixture must be a no-op.
+5. Postponed/cancelled games → bets `void`, `BET_REFUND` of the stake. A game reported final with tied scores (should never happen) is voided the same way.
+6. Rerunning settlement for the same game must be a no-op.
 
 ## Repository layout (target)
 
@@ -95,7 +98,7 @@ backend/
     models/       # SQLAlchemy models
     schemas/      # Pydantic request/response models
     db/           # session, transaction helpers
-    workers/      # Celery tasks: fixtures, odds, settlement, outbox publisher
+    workers/      # Celery tasks: games, odds, settlement, outbox publisher
   alembic/
   tests/
     unit/  integration/  concurrency/  idempotency/  recovery/
@@ -130,7 +133,7 @@ k6 run load/place_bets.js
 - Idempotency tests: same HTTP request twice → one bet; same settlement message twice → totals unchanged.
 - Recovery tests: kill the settlement worker mid-batch, restart, verify every bet settles exactly once.
 - Every test touching money ends with a ledger reconciliation assertion.
-- Unit-test odds math (probabilities sum to ~1 before margin) and payout rounding.
+- Unit-test odds math (home + away probabilities sum to 1 before margin) and payout rounding.
 
 ## Coding conventions
 
@@ -138,7 +141,7 @@ k6 run load/place_bets.js
 - Type hints everywhere; `mypy` clean. Pydantic models at API boundaries.
 - Migrations via Alembic only — never hand-edit the schema. Constraints (CHECK, UNIQUE, FK) belong in migrations.
 - Celery tasks must be safe to retry: idempotent, no side effects outside the DB transaction except via the outbox.
-- Use structured logging with `bet_id`, `account_id`, `fixture_id`, and idempotency key where relevant.
+- Use structured logging with `bet_id`, `account_id`, `game_id`, and idempotency key where relevant.
 - Secrets come from env vars; never commit `.env` or API keys.
 
 ## Things to avoid
@@ -153,7 +156,7 @@ k6 run load/place_bets.js
 
 ## Roadmap
 
-1. **Weeks 1–4 — core backend:** auth, accounts, ledger, fixture ingestion, odds model, bet placement with locking + idempotency, settlement, voids/refunds, bet history, integration tests.
+1. **Weeks 1–4 — core backend:** auth, accounts, ledger, game ingestion, odds model, bet placement with locking + idempotency, settlement, voids/refunds, bet history, integration tests.
 2. **Weeks 5–7 — distributed:** Celery + RabbitMQ settlement, Redis leaderboard/caching, outbox, worker recovery, K8s manifests.
 3. **Weeks 8–10 — reliability/DevOps:** CI/CD, Prometheus/Grafana/OTel, k6 load tests, documented performance findings.
 

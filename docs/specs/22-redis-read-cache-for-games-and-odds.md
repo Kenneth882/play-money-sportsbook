@@ -1,8 +1,8 @@
-# #22: Redis read cache for fixtures and odds
+# #22: Redis read cache for games and odds
 
 - **Issue:** https://github.com/Kenneth882/play-money-sportsbook/issues/22
 - **Phase:** Phase 2: Distributed (Weeks 5–7) (#2)
-- **Blocked by:** [#9 Odds model (Elo/Poisson) and append-only odds snapshots](09-odds-model-elo-poisson-and-append-only-odds.md)
+- **Blocked by:** [#9 Odds model (Elo) and append-only odds snapshots](09-odds-model-elo-and-append-only-odds-snapshots.md)
 - **Unblocks:** —
 - **Status:** ready-for-agent
 
@@ -10,7 +10,7 @@ Must uphold the financial invariants and critical flows in [CLAUDE.md](../../CLA
 
 ## What to build
 
-Fixture and odds reads are served from Redis with sensible TTLs/invalidation. Bet placement continues to validate price against the database snapshot, never the cache.
+Game and odds reads are served from Redis with sensible TTLs/invalidation. Bet placement continues to validate price against the database snapshot, never the cache.
 
 ## Acceptance criteria
 

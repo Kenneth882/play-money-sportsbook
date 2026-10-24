@@ -2,7 +2,7 @@
 
 - **Issue:** https://github.com/Kenneth882/play-money-sportsbook/issues/24
 - **Phase:** Phase 3: Reliability/DevOps (Weeks 8–10) (#3)
-- **Blocked by:** [#18 Celery settlement consumer for fixture events](18-celery-settlement-consumer-for-fixture-events.md)
+- **Blocked by:** [#18 Celery settlement consumer for game events](18-celery-settlement-consumer-for-game-events.md)
 - **Unblocks:** [#25](25-opentelemetry-tracing-from-api-to-settlement.md), [#26](26-k6-load-test-and-measured-findings-write-up.md)
 - **Status:** ready-for-agent
 
