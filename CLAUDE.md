@@ -139,9 +139,10 @@ daemon. The shared `postgres_url` / `engine` / `session_factory` fixtures in
 
 CI (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`, as two
 jobs: **Lint & types** (ruff check, ruff format --check, mypy) and **Tests** (full pytest,
-including Testcontainers against real Postgres using the runner's Docker). Both must be
-green to merge; `main` branch protection requires these checks. To reproduce CI locally,
-run the backend commands above with `uv sync --frozen`.
+including Testcontainers against real Postgres using the runner's Docker). Merging needs
+both checks green once `main` branch protection requires them (Settings → Branches). To
+reproduce CI locally, run the backend commands above, installing with `uv sync --frozen`
+instead of `uv sync`.
 
 ## Testing expectations
 
