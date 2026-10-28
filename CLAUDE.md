@@ -114,17 +114,28 @@ load/             # k6 scripts
 
 > Update this section as the real tooling lands.
 
+Python tooling is managed by **uv** (`backend/pyproject.toml` + `uv.lock`). Run backend
+commands from `backend/`; run `docker compose` from the repo root (root `compose.yaml`
+includes `infra/docker-compose.yml`).
+
 ```bash
-docker compose up --build                     # full local stack
+# repo root
+docker compose up --build                     # Postgres + backend on :8000 (GET /health)
 docker compose run --rm backend alembic upgrade head
-docker compose run --rm backend pytest        # all backend tests
-pytest tests/unit                             # fast, no DB
-pytest tests/integration tests/concurrency    # needs Docker (Testcontainers)
-ruff check . && ruff format --check .
-mypy app
-alembic revision --autogenerate -m "msg"      # always review the generated file
-k6 run load/place_bets.js
+
+# backend/
+uv sync                                       # install deps incl. dev tools
+uv run pytest                                 # all tests; integration ones need Docker running
+uv run pytest tests/unit                      # fast, no DB
+uv run pytest tests/integration               # real Postgres via Testcontainers
+uv run ruff check . && uv run ruff format --check .
+uv run mypy app tests alembic
+uv run alembic revision --autogenerate -m "msg"   # needs DATABASE_URL; always review the file
 ```
+
+Tests run on the host, not in the backend container: Testcontainers needs the host Docker
+daemon. The shared `postgres_url` / `engine` / `session_factory` fixtures in
+`backend/tests/conftest.py` start one migrated Postgres per test run.
 
 ## Testing expectations
 
