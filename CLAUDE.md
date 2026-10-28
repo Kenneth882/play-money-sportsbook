@@ -137,6 +137,12 @@ Tests run on the host, not in the backend container: Testcontainers needs the ho
 daemon. The shared `postgres_url` / `engine` / `session_factory` fixtures in
 `backend/tests/conftest.py` start one migrated Postgres per test run.
 
+CI (`.github/workflows/ci.yml`) runs on every pull request and every push to `main`, as two
+jobs: **Lint & types** (ruff check, ruff format --check, mypy) and **Tests** (full pytest,
+including Testcontainers against real Postgres using the runner's Docker). Both must be
+green to merge; `main` branch protection requires these checks. To reproduce CI locally,
+run the backend commands above with `uv sync --frozen`.
+
 ## Testing expectations
 
 - Integration, concurrency, and idempotency tests run against **real Postgres** (Testcontainers). Never mock the database for anything touching money.
