@@ -1,0 +1,3 @@
+# Lets `docker compose ...` run from the repo root; the stack lives in infra/.
+include:
+  - infra/docker-compose.yml
